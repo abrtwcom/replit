@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrthographicCamera } from "@react-three/drei";
 import Model from "./Model";
@@ -30,7 +31,9 @@ export default function Scene() {
                     ]}
                     position={[0, 0, 2]}
                 />
-                <Model />
+                <Suspense fallback={null}>
+                    <Model />
+                </Suspense>
             </Canvas>
         </div>
     );

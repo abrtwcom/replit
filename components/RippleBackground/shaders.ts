@@ -10,7 +10,7 @@ void main() {
 export const fragment = `
 uniform sampler2D uTexture;
 uniform sampler2D uDisplacement;
-uniform vec4 winResolution;
+uniform vec2 winResolution;
 varying vec2 vUv;
 float PI = 3.141592653589793238;
 

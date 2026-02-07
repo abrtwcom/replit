@@ -30,8 +30,8 @@ export default function Model() {
         },
     });
 
-    const fboBase = useFBO(device.width, device.height);
-    const fboTexture = useFBO(device.width, device.height);
+    const fboBase = useFBO();
+    const fboTexture = useFBO();
 
     // Helper function to create the background image scene
     const { scene: imageScene, camera: imageCamera } = useMemo(() => {
@@ -52,11 +52,7 @@ export default function Model() {
         const material = new THREE.MeshBasicMaterial({ map: bgTexture });
         const image = new THREE.Mesh(geometry, material);
 
-        // Scale to cover viewport (simple cover logic)
-        // We want the image to handle aspect ratio properly or just stretch? 
-        // Usually 'cover' is preferred. simpler for now: stretch to viewport
-        // If the user wants 'cover', we'd need aspect ratio math.
-        // Let's stick to viewport width/height for full coverage.
+        // Scale to cover viewport
         image.scale.set(viewport.width, viewport.height, 1);
         image.position.set(0, 0, 1);
 
@@ -142,9 +138,9 @@ export default function Model() {
             // 3. Update uniforms
             uniforms.current.uTexture.value = fboTexture.texture;
             uniforms.current.uDisplacement.value = fboBase.texture;
-            uniforms.current.winResolution.value = new THREE.Vector2(device.width, device.height).multiplyScalar(
-                device.pixelRatio
-            );
+
+            // Use domElement width/height which are standard
+            uniforms.current.winResolution.value.set(gl.domElement.width, gl.domElement.height);
 
             // 4. Reset render target to screen (null) and render the final shader mesh
             gl.setRenderTarget(null);
@@ -153,8 +149,9 @@ export default function Model() {
 
     return (
         <group>
+            {meshes}
             <mesh>
-                <planeGeometry args={[device.width, device.height, 1, 1]} />
+                <planeGeometry args={[viewport.width, viewport.height, 1, 1]} />
                 <shaderMaterial
                     vertexShader={vertex}
                     fragmentShader={fragment}

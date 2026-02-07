@@ -1,21 +1,16 @@
-
-import Image from "next/image";
-
-import RippleBackground from "@/components/RippleBackground/BackgroundWrapper";
+import RippleBackground from "@components/RippleBackground";
 
 export default function Home() {
   return (
-    <div className="relative min-h-screen font-sans text-black dark:text-white">
+    <main className="relative min-h-screen">
+      {/* 1. The Background */}
       <RippleBackground />
-      <main className="flex min-h-screen flex-col items-center justify-center p-24 z-10 relative">
-        <h1 className="text-5xl font-bold mb-8 text-white drop-shadow-md">My Portfolio</h1>
-        {/* Placeholder content to demonstrate the background */}
-        <div className="bg-white/10 backdrop-blur-md p-8 rounded-xl border border-white/20 shadow-xl max-w-lg">
-          <p className="text-lg text-white">
-            Welcome to my portfolio. Move your mouse to see the ripple effect on the background.
-          </p>
-        </div>
-      </main>
-    </div>
+
+      {/* 2. Your Portfolio Content */}
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen text-white">
+        <h1 className="text-6xl font-bold drop-shadow-lg">My Portfolio</h1>
+        <p className="mt-4 text-xl drop-shadow-md">Hover over the background to see the ripple effect.</p>
+      </div>
+    </main>
   );
 }
