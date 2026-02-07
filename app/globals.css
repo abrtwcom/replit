@@ -4,9 +4,21 @@
   margin: 0;
 }
 
-html, body {
-  max-width: 100vw;
-  overflow-x: hidden;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
   height: 100%;
+  overflow: hidden;
   background: black;
+}
+
+#__next {
+  width: 100%;
+  height: 100%;
 }

@@ -1,4 +1,4 @@
-import RippleBackground from "@components/RippleBackground";
+import RippleBackground from "../components/RippleBackground";
 
 export default function Home() {
   return (
