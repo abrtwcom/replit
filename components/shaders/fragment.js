@@ -1,16 +1,7 @@
-export const vertex = `
-varying vec2 vUv;
-
-void main() {
-  vUv = uv;
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-}
-`;
-
 export const fragment = `
 uniform sampler2D uTexture;
 uniform sampler2D uDisplacement;
-uniform vec2 winResolution;
+uniform vec4 winResolution;
 varying vec2 vUv;
 float PI = 3.141592653589793238;
 

@@ -1,10 +1,7 @@
-"use client";
-
-import { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrthographicCamera } from "@react-three/drei";
 import Model from "./Model";
 import useDimension from "@/hooks/useDimension";
+import { OrthographicCamera } from "@react-three/drei";
 
 export default function Scene() {
     const device = useDimension();
@@ -17,8 +14,8 @@ export default function Scene() {
     const aspect = device.width / device.height;
 
     return (
-        <div className="fixed top-0 left-0 w-full h-full -z-50 pointer-events-none">
-            <Canvas className="w-full h-full">
+        <div className="h-screen w-full fixed inset-0">
+            <Canvas>
                 <OrthographicCamera
                     makeDefault
                     args={[
@@ -31,9 +28,7 @@ export default function Scene() {
                     ]}
                     position={[0, 0, 2]}
                 />
-                <Suspense fallback={null}>
-                    <Model />
-                </Suspense>
+                <Model />
             </Canvas>
         </div>
     );
