@@ -1,7 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
-const Scene = dynamic(() => import("@/components/RippleBackground/Scene"), {
-  ssr: false,
+const Scene = dynamic(() => import("@/components/Scene"), {
   loading: () => (
     <div role="status" className="flex w-full h-screen justify-center items-center">
       <svg
