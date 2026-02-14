@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useMemo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useFBO, useTexture } from "@react-three/drei";
 import * as THREE from "three";
@@ -9,15 +9,16 @@ import { fragment } from "@/shaders/fragment";
 
 export default function Model() {
   const { viewport, gl, camera } = useThree();
-  const texture = useTexture("/images/brush.png");
+  const brushTexture = useTexture("/images/brush.png");
+  const backgroundTexture = useTexture("/images/jio.jpg");
   const meshRefs = useRef([]);
   const mouse = useMouse();
   const device = useDimension();
-  const [prevMouse, setPrevMouse] = useState({ x: 0, y: 0 });
-  const [currentWave, setCurrentWave] = useState(0);
+  const prevMouse = useRef({ x: 0, y: 0 });
+  const currentWave = useRef(0);
   const max = 100;
 
-  const scene = useRef(new THREE.Scene()).current;
+  const rippleScene = useRef(new THREE.Scene()).current;
 
   const uniforms = useRef({
     uDisplacement: { value: null },
@@ -27,14 +28,39 @@ export default function Model() {
     },
   });
 
-  const fboBase = useFBO(device.width, device.height);
-  const fboTexture = useFBO(device.width, device.height);
+  const fboBase = useFBO(device.width || 1, device.height || 1);
+  const fboTexture = useFBO(device.width || 1, device.height || 1);
 
-  const { scene: imageScene, camera: imageCamera } = Images(viewport);
+  // Create the image scene with orthographic camera for the background
+  const { scene: imageScene, camera: imageCamera } = useMemo(() => {
+    const scene = new THREE.Scene();
+    const cam = new THREE.OrthographicCamera(
+      viewport.width / -2,
+      viewport.width / 2,
+      viewport.height / 2,
+      viewport.height / -2,
+      -1000,
+      1000
+    );
+    cam.position.z = 2;
+    scene.add(cam);
 
+    const geometry = new THREE.PlaneGeometry(1, 1);
+    const material = new THREE.MeshBasicMaterial({ map: backgroundTexture });
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.scale.set(viewport.width, viewport.height, 1);
+    scene.add(mesh);
+
+    return { scene, camera: cam };
+  }, [viewport.width, viewport.height, backgroundTexture]);
+
+  // Create brush meshes for ripple effect
   useEffect(() => {
     const geometry = new THREE.PlaneGeometry(60, 60, 1, 1);
-    const material = new THREE.MeshBasicMaterial({ transparent: true, map: texture });
+    const material = new THREE.MeshBasicMaterial({
+      transparent: true,
+      map: brushTexture,
+    });
 
     meshRefs.current = Array.from({ length: max }).map(() => {
       const mesh = new THREE.Mesh(geometry, material.clone());
@@ -46,9 +72,9 @@ export default function Model() {
     return () => {
       geometry.dispose();
       material.dispose();
-      meshRefs.current.forEach(m => m.material.dispose());
+      meshRefs.current.forEach((m) => m.material.dispose());
     };
-  }, [texture]);
+  }, [brushTexture]);
 
   function setNewWave(x, y, index) {
     const mesh = meshRefs.current[index];
@@ -61,12 +87,14 @@ export default function Model() {
   }
 
   function trackMousePos(x, y) {
-    if (Math.abs(x - prevMouse.x) > 0.1 || Math.abs(y - prevMouse.y) > 0.1) {
-      const nextWave = (currentWave + 1) % max;
-      setCurrentWave(nextWave);
-      setNewWave(x, y, nextWave);
+    if (
+      Math.abs(x - prevMouse.current.x) > 0.1 ||
+      Math.abs(y - prevMouse.current.y) > 0.1
+    ) {
+      currentWave.current = (currentWave.current + 1) % max;
+      setNewWave(x, y, currentWave.current);
     }
-    setPrevMouse({ x, y });
+    prevMouse.current = { x, y };
   }
 
   useFrame(({ gl, scene: finalScene }) => {
@@ -85,25 +113,24 @@ export default function Model() {
     });
 
     if (device.width > 0 && device.height > 0) {
+      // Render brush strokes to FBO for displacement map
       gl.setRenderTarget(fboBase);
       gl.clear();
       meshRefs.current.forEach((mesh) => {
-        if (mesh.visible) {
-          scene.add(mesh);
-        }
+        if (mesh.visible) rippleScene.add(mesh);
       });
-      gl.render(scene, camera);
+      gl.render(rippleScene, camera);
       meshRefs.current.forEach((mesh) => {
-        if (mesh.visible) {
-          scene.remove(mesh);
-        }
+        if (mesh.visible) rippleScene.remove(mesh);
       });
 
+      // Set texture uniform, then render background to FBO
       uniforms.current.uTexture.value = fboTexture.texture;
       gl.setRenderTarget(fboTexture);
       gl.render(imageScene, imageCamera);
       uniforms.current.uDisplacement.value = fboBase.texture;
 
+      // Render final scene with shader to screen
       gl.setRenderTarget(null);
       gl.render(finalScene, camera);
 
@@ -114,29 +141,6 @@ export default function Model() {
     }
   }, 1);
 
-  function Images(viewport) {
-    const scene = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera(
-      viewport.width / -2,
-      viewport.width / 2,
-      viewport.height / 2,
-      viewport.height / -2,
-      -1000,
-      1000
-    );
-    camera.position.z = 2;
-    scene.add(camera);
-
-    const geometry = new THREE.PlaneGeometry(1, 1);
-    const backgroundTexture = useTexture("/images/jio.jpg");
-    const backgroundMaterial = new THREE.MeshBasicMaterial({ map: backgroundTexture });
-    const background = new THREE.Mesh(geometry, backgroundMaterial);
-    background.scale.set(viewport.width, viewport.height, 1);
-    scene.add(background);
-
-    return { scene, camera };
-  }
-
   return (
     <group>
       <mesh>
@@ -146,7 +150,7 @@ export default function Model() {
           fragmentShader={fragment}
           transparent={true}
           uniforms={uniforms.current}
-        ></shaderMaterial>
+        />
       </mesh>
     </group>
   );

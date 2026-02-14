@@ -1,4 +1,5 @@
 import { Canvas } from "@react-three/fiber";
+import { Suspense } from "react";
 import Model from "./Model";
 import useDimension from "@/hooks/useDimension";
 import { OrthographicCamera } from "@react-three/drei";
@@ -6,16 +7,20 @@ import { OrthographicCamera } from "@react-three/drei";
 export default function Scene() {
   const device = useDimension();
 
-  if (!device.width || !device.height) {
-    return null;
-  }
-
-  const frustumSize = device.height;
-  const aspect = device.width / device.height;
+  const frustumSize = device.height || 1;
+  const aspect = device.width && device.height ? device.width / device.height : 1;
 
   return (
-    <div className="h-screen w-full">
-      <Canvas>
+    <div style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", overflow: "hidden" }}>
+      <Canvas
+        dpr={[1, 2]}
+        gl={{
+          antialias: false,
+          powerPreference: "high-performance",
+          stencil: false,
+          depth: false,
+        }}
+      >
         <OrthographicCamera
           makeDefault
           args={[
@@ -28,7 +33,11 @@ export default function Scene() {
           ]}
           position={[0, 0, 2]}
         />
-        <Model />
+        {device.width > 0 && device.height > 0 && (
+          <Suspense fallback={null}>
+            <Model />
+          </Suspense>
+        )}
       </Canvas>
     </div>
   );
