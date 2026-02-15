@@ -2,6 +2,10 @@
 import dynamic from "next/dynamic";
 const Scene = dynamic(() => import("@/components/Scene"), {
   loading: () => (
+    <div> 
+
+        <h1 className="text-2xl font-bold text-center mt-4">Hover over the picture to see result...</h1>
+    
     <div role="status" className="flex w-full h-screen justify-center items-center">
       <svg
         aria-hidden="true"
@@ -21,7 +25,10 @@ const Scene = dynamic(() => import("@/components/Scene"), {
       </svg>
       <span className="sr-only">Loading...</span>
     </div>
+    
   ),
+  </div> )
+  
 });
 
 export default function Home() {
@@ -31,3 +38,4 @@ export default function Home() {
     </>
   );
 }
+
